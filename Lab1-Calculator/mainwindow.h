@@ -19,9 +19,15 @@ public:
 private slots:
     void digitClicked();
     void on_btnClear_clicked();
+    void on_btnDecimal_clicked();
+    void on_btnBackspace_clicked();
+    void on_btnSign_clicked();
 
 private:
     void handleDigit(const QString &digit);
+    void handleDecimal();
+    void handleBackspace();
+    void handleSignChange();
     void handleClear();
     void updateDisplay();
 
