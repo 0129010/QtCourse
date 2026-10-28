@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <QKeyEvent>
 #include <QPushButton>
 #include <QList>
 #include <QtMath>
@@ -59,6 +60,53 @@ void MainWindow::on_btnBackspace_clicked()  { handleBackspace(); }
 void MainWindow::on_btnSign_clicked()       { handleSignChange(); }
 void MainWindow::on_btnEquals_clicked()     { handleEquals(); }
 
+/* 键盘只做“翻译”：把按键映射成与鼠标相同的动作，
+   实际处理全部调用 handleXxx()，保证两种输入逻辑完全一致。 */
+void MainWindow::keyPressEvent(QKeyEvent *event)
+{
+    const int key = event->key();
+    if (key >= Qt::Key_0 && key <= Qt::Key_9) {
+        handleDigit(QString::number(key - Qt::Key_0));
+        return;
+    }
+    switch (key) {
+    case Qt::Key_Period:
+    case Qt::Key_Comma:
+        handleDecimal();
+        break;
+    case Qt::Key_Plus:
+        handleOperator(QStringLiteral("+"));
+        break;
+    case Qt::Key_Minus:
+        handleOperator(QStringLiteral("−"));
+        break;
+    case Qt::Key_Asterisk:
+        handleOperator(QStringLiteral("×"));
+        break;
+    case Qt::Key_Slash:
+        handleOperator(QStringLiteral("÷"));
+        break;
+    case Qt::Key_Equal:
+    case Qt::Key_Return:
+    case Qt::Key_Enter:
+        handleEquals();
+        break;
+    case Qt::Key_Backspace:
+        handleBackspace();
+        break;
+    case Qt::Key_Escape:
+    case Qt::Key_Delete:
+        handleClear();
+        break;
+    case Qt::Key_F9:
+        handleSignChange();
+        break;
+    default:
+        QMainWindow::keyPressEvent(event);
+        break;
+    }
+}
+
 void MainWindow::handleDigit(const QString &digit)
 {
     if (m_error) {
@@ -110,7 +158,6 @@ void MainWindow::handleOperator(const QString &op)
     } else {
         const double currentValue = m_currentInput.toDouble();
         if (!m_pendingOperator.isEmpty()) {
-            // 连续运算：先检查除零，再算出中间结果
             if (m_pendingOperator == QStringLiteral("÷") && qFuzzyIsNull(currentValue)) {
                 m_error = true;
                 m_expression = formatNumber(m_firstOperand) + QStringLiteral(" ÷ 0");
