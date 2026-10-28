@@ -3,6 +3,7 @@
 
 #include <QPushButton>
 #include <QList>
+#include <QtMath>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -11,6 +12,7 @@ MainWindow::MainWindow(QWidget *parent)
     , m_firstOperand(0.0)
     , m_waitingForSecond(false)
     , m_justCalculated(false)
+    , m_error(false)
 {
     ui->setupUi(this);
 
@@ -59,6 +61,9 @@ void MainWindow::on_btnEquals_clicked()     { handleEquals(); }
 
 void MainWindow::handleDigit(const QString &digit)
 {
+    if (m_error) {
+        handleClear();
+    }
     if (m_justCalculated) {
         handleClear();
         m_currentInput = digit;
@@ -75,6 +80,9 @@ void MainWindow::handleDigit(const QString &digit)
 
 void MainWindow::handleDecimal()
 {
+    if (m_error) {
+        handleClear();
+    }
     if (m_justCalculated) {
         handleClear();
         m_currentInput = QStringLiteral("0.");
@@ -89,17 +97,27 @@ void MainWindow::handleDecimal()
 
 void MainWindow::handleOperator(const QString &op)
 {
+    if (m_error) {
+        return;
+    }
     if (m_justCalculated) {
         m_firstOperand = m_currentInput.toDouble();
         m_pendingOperator = op;
         m_justCalculated = false;
         m_waitingForSecond = true;
     } else if (m_waitingForSecond) {
-        // 连续按多个操作符：以最后按下的为准
         m_pendingOperator = op;
     } else {
         const double currentValue = m_currentInput.toDouble();
         if (!m_pendingOperator.isEmpty()) {
+            // 连续运算：先检查除零，再算出中间结果
+            if (m_pendingOperator == QStringLiteral("÷") && qFuzzyIsNull(currentValue)) {
+                m_error = true;
+                m_expression = formatNumber(m_firstOperand) + QStringLiteral(" ÷ 0");
+                m_currentInput = QStringLiteral("除数不能为0");
+                updateDisplay();
+                return;
+            }
             m_firstOperand = calculate(m_firstOperand, currentValue, m_pendingOperator);
             m_currentInput = formatNumber(m_firstOperand);
         } else {
@@ -113,11 +131,23 @@ void MainWindow::handleOperator(const QString &op)
 
 void MainWindow::handleEquals()
 {
+    if (m_error) {
+        return;
+    }
     if (m_pendingOperator.isEmpty() || m_waitingForSecond) {
         return;
     }
     const double secondOperand = m_currentInput.toDouble();
+    if (m_pendingOperator == QStringLiteral("÷") && qFuzzyIsNull(secondOperand)) {
+        m_error = true;
+        m_expression = formatNumber(m_firstOperand) + QStringLiteral(" ÷ 0 =");
+        m_currentInput = QStringLiteral("除数不能为0");
+        updateDisplay();
+        return;
+    }
     const double result = calculate(m_firstOperand, secondOperand, m_pendingOperator);
+    m_expression = formatNumber(m_firstOperand) + QStringLiteral(" ") + m_pendingOperator
+                 + QStringLiteral(" ") + formatNumber(secondOperand) + QStringLiteral(" =");
     m_currentInput = formatNumber(result);
     m_pendingOperator.clear();
     m_waitingForSecond = false;
@@ -127,7 +157,7 @@ void MainWindow::handleEquals()
 
 void MainWindow::handleBackspace()
 {
-    if (m_waitingForSecond || m_justCalculated) {
+    if (m_error || m_waitingForSecond || m_justCalculated) {
         return;
     }
     m_currentInput.chop(1);
@@ -139,7 +169,7 @@ void MainWindow::handleBackspace()
 
 void MainWindow::handleSignChange()
 {
-    if (m_currentInput == QStringLiteral("0")) {
+    if (m_error || m_currentInput == QStringLiteral("0")) {
         return;
     }
     if (m_currentInput.startsWith('-')) {
@@ -153,10 +183,12 @@ void MainWindow::handleSignChange()
 void MainWindow::handleClear()
 {
     m_currentInput = QStringLiteral("0");
+    m_expression.clear();
     m_firstOperand = 0.0;
     m_pendingOperator.clear();
     m_waitingForSecond = false;
     m_justCalculated = false;
+    m_error = false;
     updateDisplay();
 }
 
@@ -165,14 +197,20 @@ double MainWindow::calculate(double a, double b, const QString &op) const
     if (op == QStringLiteral("+")) return a + b;
     if (op == QStringLiteral("−")) return a - b;
     if (op == QStringLiteral("×")) return a * b;
-    if (op == QStringLiteral("÷")) return a / b;   // 除数为0时会得到 inf
+    if (op == QStringLiteral("÷")) return a / b;
     return 0.0;
 }
 
 void MainWindow::updateDisplay()
 {
     ui->labelDisplay->setText(m_currentInput);
-    if (!m_pendingOperator.isEmpty()) {
+    if (m_error) {
+        ui->labelExpression->setText(m_expression);
+        return;
+    }
+    if (m_justCalculated) {
+        ui->labelExpression->setText(m_expression);
+    } else if (!m_pendingOperator.isEmpty()) {
         ui->labelExpression->setText(formatNumber(m_firstOperand) + QStringLiteral(" ") + m_pendingOperator);
     } else {
         ui->labelExpression->clear();
