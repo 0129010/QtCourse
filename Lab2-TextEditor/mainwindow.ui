@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>简单文本编辑器</string>
+   <string>简易文本编辑器</string>
   </property>
   <property name="windowIcon">
    <iconset resource="resources.qrc">
@@ -35,7 +35,7 @@
      <number>0</number>
     </property>
     <item>
-     <widget class="QPlainTextEdit" name="editor"/>
+     <widget class="CodeEditor" name="editor"/>
     </item>
    </layout>
   </widget>
@@ -72,6 +72,8 @@
     <addaction name="separator"/>
     <addaction name="actionSelectAll"/>
     <addaction name="separator"/>
+    <addaction name="actionFind"/>
+    <addaction name="actionReplace"/>
    </widget>
    <widget class="QMenu" name="menuFormat">
     <property name="title">
@@ -89,6 +91,8 @@
     <addaction name="actionToggleToolBar"/>
     <addaction name="actionToggleStatusBar"/>
     <addaction name="separator"/>
+    <addaction name="actionLineNumber"/>
+    <addaction name="actionAutoSave"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -144,6 +148,8 @@
    <addaction name="actionCopy"/>
    <addaction name="actionPaste"/>
    <addaction name="separator"/>
+   <addaction name="actionFind"/>
+   <addaction name="actionReplace"/>
   </widget>
   <widget class="QToolBar" name="toolBarFormat">
    <property name="windowTitle">
@@ -170,6 +176,8 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="actionLineNumber"/>
+   <addaction name="actionAutoSave"/>
    <addaction name="separator"/>
    <addaction name="actionToggleToolBar"/>
    <addaction name="actionToggleStatusBar"/>
@@ -340,6 +348,36 @@
     <string>选中全文</string>
    </property>
   </action>
+  <action name="actionFind">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/find.svg</normaloff>:/icons/find.svg</iconset>
+   </property>
+   <property name="text">
+    <string>查找(&amp;F)...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
+   </property>
+   <property name="statusTip">
+    <string>在文档中查找文本</string>
+   </property>
+  </action>
+  <action name="actionReplace">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/replace.svg</normaloff>:/icons/replace.svg</iconset>
+   </property>
+   <property name="text">
+    <string>替换(&amp;H)...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+H</string>
+   </property>
+   <property name="statusTip">
+    <string>查找并替换文本</string>
+   </property>
+  </action>
   <action name="actionFontColor">
    <property name="icon">
     <iconset resource="resources.qrc">
@@ -380,6 +418,39 @@
    </property>
    <property name="statusTip">
     <string>打开或关闭编辑区自动换行</string>
+   </property>
+  </action>
+  <action name="actionLineNumber">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/lineno.svg</normaloff>:/icons/lineno.svg</iconset>
+   </property>
+   <property name="text">
+    <string>显示行号(&amp;L)</string>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="statusTip">
+    <string>显示或隐藏编辑区左侧行号栏</string>
+   </property>
+  </action>
+  <action name="actionAutoSave">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/autosave.svg</normaloff>:/icons/autosave.svg</iconset>
+   </property>
+   <property name="text">
+    <string>定时自动保存(&amp;A)</string>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="statusTip">
+    <string>按设定间隔自动保存当前文件</string>
    </property>
   </action>
   <action name="actionToggleToolBar">
@@ -431,6 +502,14 @@
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>CodeEditor</class>
+   <extends>QPlainTextEdit</extends>
+   <header>codeeditor.h</header>
+   <container>0</container>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="resources.qrc"/>
  </resources>

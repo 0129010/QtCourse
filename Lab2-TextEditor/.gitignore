@@ -70,3 +70,10 @@ Thumbs.db
 # --------
 *.dll
 *.exe
+
+# 本工程自己的编译目录（Qt Creator 的 shadow build）
+build/
+tools/capture/build/
+
+# 边界测试时临时生成的文件
+testdata/
